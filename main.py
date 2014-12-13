@@ -307,7 +307,7 @@ class T(threading.Thread):
             curses.start_color()
             curses.use_default_colors()
             for fg in range(0, 16):
-                for bg in range(0, 8):
+                for bg in range(0, 16):
                     curses.init_pair(cp(fg, bg), color_map[fg], color_map[bg])
             r = 1
             while r != '':
