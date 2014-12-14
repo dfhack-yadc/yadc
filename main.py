@@ -5,9 +5,8 @@ import subprocess
 import sys
 
 import yadc.comm
-
-def abspath(path):
-    return os.path.join(os.getcwd(), *path.split('/'))
+import yadc.util
+from yadc.util import abspath
 
 def printl(*args):
     sys.stdout.write(*args)
@@ -21,6 +20,7 @@ if not check_env():
     sys.exit(1)
 
 def main():
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
     web_server_process = None
     try:
         comm_server = yadc.comm.CommServer(25143)
