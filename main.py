@@ -4,7 +4,7 @@ from __future__ import print_function
 
 import yadc.check_env
 
-import socket, struct, threading, time, curses, locale
+import socket, struct, threading, time, curses, locale, json
 import encodings.cp437 as cp437
 
 color_map = {
@@ -291,6 +291,8 @@ def cp(fg, bg):
 def bold(fg):
     return curses.A_BOLD if fg > 7 else 0
 
+DATA=''
+dlock = threading.Lock()
 class T(threading.Thread):
     daemon = True
     def __init__(self, port):
@@ -301,6 +303,7 @@ class T(threading.Thread):
         self.sock.bind(('localhost', port))
         self.sock.listen(4)
     def run(self):
+        global DATA, dlock
         while True:
             conn, addr = self.sock.accept()
             win = curses.initscr()
@@ -318,21 +321,37 @@ class T(threading.Thread):
                 r = conn.recv(pl)
                 if len(r) != pl:
                     break
-                for i in range(0, len(r), 5):
-                    try:
-                        win.addstr(
-                            ord(r[i + 1]),
-                            ord(r[i]),
-                            cp437[ord(r[i + 2])][0].encode('utf-8'),
-                            curses.color_pair(cp(ord(r[i + 3]), ord(r[i + 4])))
-                            | bold(ord(r[i + 3]))
-                        )
-                    except curses.error as e:
+                if self.port == 25144:
+                    pass
+                    for i in range(0, len(r), 5):
                         try:
-                            win.addch(ord(r[i + 1]), ord(r[i]), ord('q'), curses.color_pair(0))
-                        except curses.error:
+                            with dlock:
+                                if DATA:
+                                    if 'grid' in DATA:
+                                        y, x = DATA['grid']['y'], DATA['grid']['x']
+                                        for c in range(y):
+                                            win.addch(c, x, ' ', curses.color_pair(0))
+                                        for c in range(x):
+                                            win.addch(y, c, ' ', curses.color_pair(0))
+                            win.addstr(
+                                ord(r[i + 1]),
+                                ord(r[i]),
+                                cp437[ord(r[i + 2])][0].encode('utf-8'),
+                                curses.color_pair(cp(ord(r[i + 3]), ord(r[i + 4])))
+                                | bold(ord(r[i + 3]))
+                            )
+                        except curses.error as e:
+                            try:
+                                win.addch(ord(r[i + 1]), ord(r[i]), ord('q'), curses.color_pair(0))
+                            except curses.error:
+                                pass
+                    win.refresh()
+                elif self.port == 25143:
+                    with dlock:
+                        try:
+                            DATA = json.loads(r)
+                        except json.error:
                             pass
-                win.refresh()
             curses.endwin()
 
 if __name__ == '__main__':
