@@ -1,4 +1,8 @@
-import os
+import os, sys
+
+def printl(*args):
+    sys.stdout.write(*args)
+    sys.stdout.flush()
 
 def rootpath():
     return os.path.dirname(os.path.dirname(__file__))

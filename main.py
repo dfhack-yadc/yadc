@@ -6,11 +6,7 @@ import sys
 
 import yadc.comm
 import yadc.util
-from yadc.util import abspath
-
-def printl(*args):
-    sys.stdout.write(*args)
-    sys.stdout.flush()
+from yadc.util import abspath, printl
 
 # Add ./depends to path
 sys.path.insert(sys.path.index('') if '' in sys.path else 0, abspath('depends'))
@@ -18,6 +14,8 @@ from yadc.check_env import check_env
 if not check_env():
     print('\nEnvironment check failed!')
     sys.exit(1)
+else:
+    print('yadc: Environment check successful')
 
 def main():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
