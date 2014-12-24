@@ -4,7 +4,7 @@ from __future__ import print_function
 
 import yadc.check_env
 
-import socket, struct, threading, time, curses, locale, json
+import socket, struct, threading, time, curses, locale, json, sys
 import encodings.cp437 as cp437
 
 color_map = {
@@ -322,17 +322,8 @@ class T(threading.Thread):
                 if len(r) != pl:
                     break
                 if self.port == 25144:
-                    pass
                     for i in range(0, len(r), 5):
                         try:
-                            with dlock:
-                                if DATA:
-                                    if 'grid' in DATA:
-                                        y, x = DATA['grid']['y'], DATA['grid']['x']
-                                        for c in range(y):
-                                            win.addch(c, x, ' ', curses.color_pair(0))
-                                        for c in range(x):
-                                            win.addch(y, c, ' ', curses.color_pair(0))
                             win.addstr(
                                 ord(r[i + 1]),
                                 ord(r[i]),
@@ -345,6 +336,19 @@ class T(threading.Thread):
                                 win.addch(ord(r[i + 1]), ord(r[i]), ord('q'), curses.color_pair(0))
                             except curses.error:
                                 pass
+                    with dlock:
+                        if DATA:
+                            if 'grid' in DATA:
+                                grid_y, grid_x = DATA['grid']['y'], DATA['grid']['x']
+                                max_y, max_x = win.getmaxyx()
+                                for x in range(max_x):
+                                    for y in range(max_y):
+                                        if y >= grid_y or x >= grid_x:
+                                            try:
+                                                win.addch(y, x, ord(' '), curses.color_pair(0))
+                                            except curses.error as e:
+                                                pass
+                        DATA = ''
                     win.refresh()
                 elif self.port == 25143:
                     with dlock:
