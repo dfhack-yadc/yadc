@@ -29,6 +29,8 @@ def main():
     web_server_port = config.get('web_server_port', 8000)
     web_server_process = None
     try:
+        # TODO: Only run this when necessary
+        subprocess.call(['python', abspath('yadc_remote/manage.py'), 'migrate'])
         comm_server = yadc.comm.CommServer(25143)
         screen_server = yadc.comm.ScreenServer(25144)
         web_server_env = os.environ.copy()
