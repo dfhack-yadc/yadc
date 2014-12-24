@@ -19,7 +19,6 @@ def check_env():
                 globals().setdefault(module, importlib.import_module(module))
             except Exception as e:
                 print('Failed to install %s: %s' % (module, e if e else '(unknown)'))
-                print(sys.path)
                 return False
     if not django.get_version().startswith('1.7.'):
         print('Django 1.7.x expected, %s found' % django.get_version())
