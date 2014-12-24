@@ -8,10 +8,7 @@ import yadc.comm
 import yadc.util
 from yadc.util import abspath, printl
 
-# Add ./depends to path
-if not os.path.isdir('depends'):
-    os.mkdir('depends')
-sys.path.insert(sys.path.index('') if '' in sys.path else 0, abspath('depends'))
+yadc.util.update_path()
 from yadc.check_env import check_env
 if not check_env():
     print('\nEnvironment check failed!')
