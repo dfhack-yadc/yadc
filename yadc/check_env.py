@@ -1,6 +1,6 @@
 # Check environment, install required packages, etc.
 
-import importlib, os, random, re, sys
+import importlib, os, re, sys
 import tarfile, zipfile
 
 import yadc.util
@@ -25,12 +25,9 @@ def check_env():
         print('Django 1.7.x expected, %s found' % django.get_version())
         return False
     print('Django version %s' % django.get_version())
-    secret_path = yadc.util.abspath('yadc_remote/secret.txt')
-    if not os.path.exists(secret_path):
+    if not os.path.exists(yadc.util.abspath('yadc_remote/secret.txt')):
         print('Generating secret key')
-        with open(secret_path, 'w') as f:
-            f.write(''.join([random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)')
-                for i in range(50)]))
+        yadc.util.new_secret_key()
     return True
 
 def try_install(module):
