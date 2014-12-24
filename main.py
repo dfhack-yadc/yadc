@@ -306,6 +306,10 @@ class T(threading.Thread):
         global DATA, dlock
         while True:
             conn, addr = self.sock.accept()
+            df_id = conn.recv(8);
+            if len(df_id) != 8:
+                print('ID not sent')
+                continue
             win = curses.initscr()
             curses.start_color()
             curses.use_default_colors()
