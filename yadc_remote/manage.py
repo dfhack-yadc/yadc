@@ -2,7 +2,10 @@
 import os
 import sys
 
+# Allow "cd yadc_remote; python manage.py" and "python yadc_remote/manage.py"
+os.chdir(os.path.dirname(__file__))
 sys.path.append('.')
+sys.path.append('..')
 import yadc.util
 yadc.util.update_path()
 
