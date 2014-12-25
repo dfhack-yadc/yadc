@@ -23,7 +23,8 @@ def check_env():
     if not django.get_version().startswith('1.7.'):
         print('Django 1.7.x expected, %s found' % django.get_version())
         return False
-    print('Django version %s' % django.get_version())
+    print('Django version %s: %s' % (django.get_version(),
+        os.path.dirname(yadc.util.relpath(django.__file__))))
     if not os.path.exists(yadc.util.abspath('yadc_remote/secret.txt')):
         print('Generating secret key')
         yadc.util.new_secret_key()

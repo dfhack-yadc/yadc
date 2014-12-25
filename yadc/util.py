@@ -14,6 +14,9 @@ def rootpath():
 def abspath(path):
     return os.path.join(rootpath(), *path.replace('\\', '/').split('/'))
 
+def relpath(path):
+    return path.replace(rootpath(), '.')
+
 def update_path():
     """ Add depends/ directory to sys.path """
     depends_dir = abspath('depends')

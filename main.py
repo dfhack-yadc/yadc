@@ -35,7 +35,7 @@ def main():
         screen_server = yadc.comm.ScreenServer(25144)
         web_server_env = os.environ.copy()
         web_server_env['PYTHONPATH'] = ':'.join(sys.path)
-        web_server_process = subprocess.Popen(['python', abspath('yadc_remote/manage.py'),
+        web_server_process = subprocess.Popen([sys.executable, abspath('yadc_remote/manage.py'),
             'runserver', '0.0.0.0:%s' % str(web_server_port)], env=web_server_env)
         web_server_process.wait()
     except KeyboardInterrupt:
