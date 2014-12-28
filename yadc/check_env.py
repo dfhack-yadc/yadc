@@ -1,11 +1,28 @@
 # Check environment, install required packages, etc.
 
 import importlib, os, re, sys
-import tarfile, zipfile
+import hashlib, tarfile, zipfile
 
 import yadc.util
 
-required_modules = ['django']
+if yadc.util.py2:
+    from urllib import urlretrieve
+else:
+    from urllib.request import urlretrieve
+
+required_modules = {
+    'django': {
+        'url': 'https://pypi.python.org/packages/source/D/Django/Django-1.7.1.tar.gz',
+        'md5': '81dae89f21647b9aa5c46c6b7dbfa349',
+        'module_path': 'Django-1.7.1/django'
+    }
+}
+for module in required_modules:
+    info = required_modules[module]
+    if 'url' not in info or 'md5' not in info or 'module_path' not in info:
+        raise ValueError("Invalid module requirement: %s" % module)
+    info['url'] = info['url'].replace('\\', '/')
+    info['module_path'] = info['module_path'].replace('\\', '/').split('/')
 
 def check_env():
     for module in required_modules:
@@ -31,40 +48,27 @@ def check_env():
     return True
 
 def try_install(module):
-    """ Install a package from PyPI into depends/
+    """ Install a package into depends/
 
-    This assumes that pip is insalled and packages are distributed in
-    .tar.{gz,bz2} format and unpack into the following structure:
-    Package-x.x.x/
-        (distutils-related files)
-        package/
-            __init__.py
-            (package code)
+    This assumes that packages are distributed in .tar.{gz,bz2} format
     """
-    pattern = re.compile(r'%s.+?(tar\.gz|tar\.bz2)' % module, re.IGNORECASE)
-    matches = filter(pattern.match, os.listdir('depends'))
-    if not len(matches):
-        try:
-            import pip
-        except ImportError:
-            print('pip not found - cannot install dependencies')
-            return False
-        try:
-            pip.main(['install', '--download', 'depends', module])
-        except (Exception, SystemExit) as e:
-            print(e if e else "An unknown error occured")
-            return False
+    if module not in required_modules:
+        raise ValueError('Unrecognized module')
+    info = required_modules[module]
+    archive_path = os.path.join('depends', info['url'].split('/')[-1])
+    if os.path.exists(archive_path):
+        print('Already downloaded: %s' % archive_path)
     else:
-        print('Already downloaded.')
-    matches = filter(pattern.match, os.listdir('depends'))
-    match = matches[0]
-    if not len(matches):
-        raise Exception('Archive for %s not found' % module)
-    archive_path = os.path.join('depends', match)
-    print('Unpacking %s (%s)' % (module, archive_path))
+        print('Downloading %s' % info['url'])
+        urlretrieve(info['url'], archive_path)
+    with open(archive_path, 'rb') as f:
+        md5 = hashlib.md5(f.read()).hexdigest()
+        if md5 != info['md5']:
+            raise ValueError('MD5 mismatch: Expected %s, actual %s' % (info['md5'], md5))
+    print('Unpacking %s' % archive_path)
     archive = tarfile.open(archive_path)
     archive.extractall(path='depends')
     archive.close()
-    os.rename(os.path.join('depends', match.split('.tar')[0], module),
+    os.rename(os.path.join('depends', *info['module_path']),
               os.path.join('depends', module))
     return True
