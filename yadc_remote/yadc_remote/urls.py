@@ -6,9 +6,11 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    url(r'^admin/', include(admin.site.urls)),
+    #url(r'^admin/', include(admin.site.urls)),
     (r'^static/(?P<path>.*)$', 'django.views.static.serve', {
         'document_root': settings.STATIC_PATH,
         'show_indexes': settings.DEBUG,
     }),
+    url(r'^game/', include('web_interface.urls')),
+    url(r'^$', 'web_interface.views.root_redirect'),
 )
