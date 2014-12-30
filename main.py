@@ -93,9 +93,19 @@ def main():
             env=web_server_env,
             shell=False
         )
+        comm_server.listen()
+        screen_server.listen()
         web_server_process.wait()
     except KeyboardInterrupt:
         print('\n')
+        try:
+            comm_server.shutdown()
+        except socket.error:
+            print('Failed to shut down server: %r' % comm_server)
+        try:
+            screen_server.shutdown()
+        except socket.error:
+            print('Failed to shut down server: %r' % screen_server)
     except Exception as e:
         traceback.print_exc()
     if web_server_process:
