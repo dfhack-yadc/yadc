@@ -1,4 +1,4 @@
-import os, random, sys
+import os, random, sys, threading, time
 
 py_version = int(sys.version[0])
 py2 = (py_version == 2)
@@ -7,6 +7,25 @@ py3 = (py_version == 3)
 def printl(*args):
     sys.stdout.write(*args)
     sys.stdout.flush()
+
+# Prevent interleaved output from separate threads
+# Note that this does not affect external code and/or code that uses print(),
+# notably the web server
+_log_lock = threading.Lock()
+def log(msg, prepend='[yadc]', type=None, newline=True):
+    with _log_lock:
+        printl(time.strftime('[%d/%b/%Y %H:%M:%S] ') +
+            ((prepend + ' ') if prepend else '') +
+            (('[%s] ' % type) if type else '') +
+            msg + ('\n' if newline else ''))
+
+def log_wrapper(type):
+    def wrapper(*args, **kwargs):
+        return log(type=type, *args, **kwargs)
+    return wrapper
+
+warn = log_wrapper('warning')
+err = log_wrapper('error')
 
 def rootpath():
     return os.path.dirname(os.path.dirname(__file__))

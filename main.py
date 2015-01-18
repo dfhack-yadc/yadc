@@ -98,14 +98,11 @@ def main():
         web_server_process.wait()
     except KeyboardInterrupt:
         print('\n')
-        try:
-            comm_server.shutdown()
-        except socket.error:
-            print('Failed to shut down server: %r' % comm_server)
-        try:
-            screen_server.shutdown()
-        except socket.error:
-            print('Failed to shut down server: %r' % screen_server)
+        for server in (comm_server, screen_server):
+            try:
+                server.shutdown()
+            except socket.error:
+                print('Failed to shut down server: %r' % server)
     except Exception as e:
         traceback.print_exc()
     if web_server_process:
