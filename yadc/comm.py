@@ -3,6 +3,15 @@
 
 import select, socket, threading
 
+import yadc.util as util
+
+# From C++
+YADC_MSG_OK = 0
+YADC_MSG_ERROR = 1
+YADC_ERR_ID_IN_USE = 1
+def encode_error(code):
+    return chr(YADC_MSG_ERROR) + chr(code)
+
 class ServerConnectionHandler(threading.Thread):
     def __init__(self, server):
         super(ServerConnectionHandler, self).__init__()
@@ -45,6 +54,7 @@ class Server(object):
     def add_client(self, client):
         with self.lock:
             self.clients.append(client)
+            util.log('New client: ' + repr(client))
 
     def remove_client(self, client):
         if isinstance(client, int):
@@ -55,6 +65,7 @@ class Server(object):
                 client.socket.close()
             except socket.error:
                 pass
+            util.log('Client disconnected: ' + repr(client))
             self.clients[client_id] = None
 
     def get_active_sockets(self):
@@ -62,7 +73,7 @@ class Server(object):
         return [c.socket for c in self.clients if c is not None]
 
     def listen(self):
-        print('server listening on %s:%i' % (self.addr, self.port))
+        util.log('server listening on %s:%i' % (self.addr, self.port))
         self.socket.listen(4)
         self.handler.start()
 
@@ -74,8 +85,15 @@ class Server(object):
                 raise
 
 
+class ScreenServerConnection(ServerConnection):
+    def __init__(self, conn, addr):
+        super(ScreenServerConnection, self).__init__(conn, addr)
+
 class ScreenServer(Server):
+    connection_class = ScreenServerConnection
+
+class CommServerConnection(ServerConnection):
     pass
 
 class CommServer(Server):
-    pass
+    connection_class = CommServerConnection
