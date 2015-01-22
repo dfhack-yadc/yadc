@@ -1,8 +1,3 @@
-### Project-specific
-
-# Dependencies are only distributed with releases
-depends/
-
 ### Python
 
 # Byte-compiled / optimized / DLL files

@@ -11,12 +11,9 @@ else:
     from urllib.request import urlretrieve
 
 required_modules = {
-    'django': {
-        'url': 'https://pypi.python.org/packages/source/D/Django/Django-1.7.1.tar.gz',
-        'md5': '81dae89f21647b9aa5c46c6b7dbfa349',
-        'module_path': 'Django-1.7.1/django'
-    }
+    # none
 }
+
 for module in required_modules:
     info = required_modules[module]
     if 'url' not in info or 'md5' not in info or 'module_path' not in info:
@@ -37,14 +34,6 @@ def check_env():
             except Exception as e:
                 print('Failed to install %s: %s' % (module, e if e else '(unknown)'))
                 return False
-    if not django.get_version().startswith('1.7.'):
-        print('Django 1.7.x expected, %s found' % django.get_version())
-        return False
-    print('Django version %s: %s' % (django.get_version(),
-        os.path.dirname(yadc.util.relpath(django.__file__))))
-    if not os.path.exists(yadc.util.abspath('yadc_remote/secret.txt')):
-        print('Generating secret key')
-        yadc.util.new_secret_key()
     return True
 
 def try_install(module):

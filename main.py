@@ -79,16 +79,15 @@ def main():
         traceback.print_exc()
         return False
     try:
-        # TODO: Only run this when necessary
-        subprocess.call(['python', abspath('yadc_remote/manage.py'), 'migrate'])
         comm_server = yadc.comm.CommServer(port=comm_server_port)
         screen_server = yadc.comm.ScreenServer(port=screen_server_port)
         web_server_env = os.environ.copy()
         web_server_env['PYTHONPATH'] = ':'.join(sys.path)
         web_server_process = subprocess.Popen([
                 sys.executable,
-                abspath('yadc_remote/manage.py'), 'runserver',
-                '0.0.0.0:%s' % str(web_server_port)
+                abspath('yadc/webserver.py'),
+                '0.0.0.0',
+                str(web_server_port),
             ],
             env=web_server_env,
             shell=False
@@ -96,11 +95,14 @@ def main():
         comm_server.listen()
         screen_server.listen()
         web_server_process.wait()
+        while True:
+            time.sleep(1)
     except KeyboardInterrupt:
         print('\n')
         for server in (comm_server, screen_server):
             try:
                 server.shutdown()
+                print('Server stopped: %r' % server)
             except socket.error:
                 print('Failed to shut down server: %r' % server)
     except Exception as e:
