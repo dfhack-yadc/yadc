@@ -83,6 +83,9 @@ def main():
         screen_server = yadc.comm.ScreenServer(port=screen_server_port)
         web_server_env = os.environ.copy()
         web_server_env['PYTHONPATH'] = ':'.join(sys.path)
+        web_server_env['YADC_WEB_SERVER_PORT'] = str(web_server_port)
+        web_server_env['YADC_COMM_SERVER_PORT'] = str(comm_server_port)
+        web_server_env['YADC_SCREEN_SERVER_PORT'] = str(screen_server_port)
         web_server_process = subprocess.Popen([
                 sys.executable,
                 abspath('yadc/webserver.py'),
