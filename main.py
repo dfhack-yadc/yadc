@@ -5,9 +5,7 @@ from __future__ import print_function
 import json
 import os
 import socket
-import subprocess
 import sys
-import textwrap
 import time
 import traceback
 
@@ -16,6 +14,9 @@ from yadc.util import abspath, printl
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 yadc.util.update_path()
+
+import yadc.webserver
+
 from yadc.check_env import check_env
 if not check_env():
     print('\nEnvironment check failed!')
@@ -70,7 +71,6 @@ def main():
     web_server_port = config.get('web_server_port', 8000)
     comm_server_port = config.get('comm_server_port', 25143)
     screen_server_port = config.get('screen_server_port', 25144)
-    web_server_process = None
     try:
         test_port(web_server_port)
         test_port(comm_server_port)
@@ -81,26 +81,17 @@ def main():
     try:
         comm_server = yadc.comm.CommServer(port=comm_server_port)
         screen_server = yadc.comm.ScreenServer(port=screen_server_port)
-        web_server_env = os.environ.copy()
-        web_server_env['PYTHONPATH'] = ':'.join(sys.path)
-        web_server_env['YADC_WEB_SERVER_PORT'] = str(web_server_port)
-        web_server_env['YADC_COMM_SERVER_PORT'] = str(comm_server_port)
-        web_server_env['YADC_SCREEN_SERVER_PORT'] = str(screen_server_port)
-        web_server_process = subprocess.Popen([
-                sys.executable,
-                abspath('yadc/webserver.py'),
-                '0.0.0.0',
-                str(web_server_port),
-            ],
-            env=web_server_env,
-            shell=False
-        )
         comm_server.listen()
         screen_server.listen()
-        web_server_process.wait()
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
+        yadc.webserver.main('0.0.0.0', web_server_port, {
+            'web_server_port': web_server_port,
+            'comm_server_port': comm_server_port,
+            'screen_server_port': screen_server_port,
+        })
+    except (Exception, KeyboardInterrupt) as e:
+        if isinstance(e, Exception):
+            traceback.print_exc()
+    finally:
         print('\n')
         for server in (comm_server, screen_server):
             try:
@@ -108,16 +99,6 @@ def main():
                 print('Server stopped: %r' % server)
             except socket.error:
                 print('Failed to shut down server: %r' % server)
-    except Exception as e:
-        traceback.print_exc()
-    if web_server_process:
-        printl('Stopping web server... ')
-        try:
-            web_server_process.terminate()
-        except Exception as e:
-            print('Failed: %s' % e)
-        else:
-            print('Ok')
 
 if __name__ == '__main__':
     main()

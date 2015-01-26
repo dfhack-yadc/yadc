@@ -14,6 +14,8 @@ import yadc.util as util
 
 bottle.TEMPLATE_PATH.append(util.abspath('remote/templates'))
 
+g_data = dict()
+
 # from http://bottlepy.org/docs/dev/recipes.html#ignore-trailing-slashes
 class StripTrailingSlashMiddleware(object):
     def __init__(self, app):
@@ -35,9 +37,7 @@ def callback(path):
 def callback():
     response.content_type = 'text/javascript'
     return 'YADC_PORTS = %s;' % json.dumps({
-        'web_server_port': int(os.environ.get('YADC_WEB_SERVER_PORT', -1)),
-        'comm_server_port': int(os.environ.get('YADC_COMM_SERVER_PORT', -1)),
-        'screen_server_port': int(os.environ.get('YADC_SCREEN_SERVER_PORT', -1)),
+        k: g_data.get(k, -1) for k in ('web_server_port', 'comm_server_port', 'screen_server_port')
     })
 
 def define_redirect(old_url, new_url):
@@ -48,20 +48,18 @@ def define_redirect(old_url, new_url):
 define_redirect('/', '/game/')
 define_redirect('/static', '/static/index.html')
 
-def main():
+def main(addr, port, data=None):
     try:
-        addr, port = sys.argv[1], int(sys.argv[2])
-    except (TypeError, ValueError) as e:
-        util.err('Invalid server address: ' + sys.argv[1])
-        return
+        addr, port = str(addr), int(port)
+    except ValueError:
+        raise ValueError('Invalid server address: %s:%s' % (addr, port))
+    if isinstance(data, dict):
+        global g_data
+        g_data = data
     try:
         app = bottle.app()
         app = StripTrailingSlashMiddleware(app)
         bottle.run(app=app, host=addr, port=port,
                    debug=bool(os.environ.get('YADC_DEBUG', False)))
     except Exception as e:
-        util.err('Web server error: %s' % e)
-        return
-
-if __name__ == '__main__':
-    main()
+        raise Exception('Web server error: %s' % e)
