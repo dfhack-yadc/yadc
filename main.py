@@ -4,13 +4,15 @@ from __future__ import print_function
 
 import yadc.check_env
 
-import socket, struct, threading, time, curses, locale, json, sys
+import socket, struct, threading, time, curses, locale, json, sys, traceback
 import encodings.cp437 as cp437
 
 import Queue
 
 if sys.version.startswith('3'):
     raise Exception('Python 3 not supported')
+
+logfile = open('err.log', 'w')
 
 color_map = {
     0: curses.COLOR_BLACK,
@@ -330,63 +332,71 @@ class T(threading.Thread):
     def run(self):
         global DATA, dlock, window
         while True:
-            conn, addr = self.sock.accept()
-            df_id = conn.recv(8);
-            if len(df_id) != 8:
-                print('ID not sent')
-                continue
-            curses_commands.put(curses_init)
-            while not window:
-                time.sleep(0.1)
-            r = 1
-            while r != '':
-                pl = conn.recv(4)
-                if len(pl) != 4:
-                    break
-                pl = struct.unpack('<l', pl)[0]
-                r = conn.recv(pl)
-                if len(r) != pl:
-                    break
-                if self.port == 25144:
-                    if opts.flash:
+            try:
+                conn, addr = self.sock.accept()
+                df_id = conn.recv(8);
+                if len(df_id) != 8:
+                    print('ID not sent')
+                    continue
+                curses_commands.put(curses_init)
+                while not window:
+                    time.sleep(0.1)
+                r = 1
+                while r != '':
+                    pl = conn.recv(4)
+                    if len(pl) != 4:
+                        break
+                    pl = struct.unpack('<l', pl)[0]
+                    r = conn.recv(pl)
+                    if len(r) != pl:
+                        break
+                    if self.port == 25144:
+                        if opts.flash:
+                            for i in range(0, len(r), 5):
+                                curses_commands.put([
+                                    window.addstr,
+                                    ord(r[i + 1]),
+                                    ord(r[i]),
+                                    ' ',
+                                    curses.color_pair(cp(0, 14))
+                                ])
+                            curses_commands.put(window.refresh)
+                            curses_commands.put([time.sleep, 0.05])
                         for i in range(0, len(r), 5):
                             curses_commands.put([
                                 window.addstr,
                                 ord(r[i + 1]),
                                 ord(r[i]),
-                                ' ',
-                                curses.color_pair(cp(0, 14))
+                                cp437[ord(r[i + 2])][0].encode('utf-8'),
+                                curses.color_pair(cp(ord(r[i + 3]), ord(r[i + 4])))
+                                | bold(ord(r[i + 3]))
                             ])
                         curses_commands.put(window.refresh)
-                        curses_commands.put([time.sleep, 0.05])
-                    for i in range(0, len(r), 5):
-                        curses_commands.put([
-                            window.addstr,
-                            ord(r[i + 1]),
-                            ord(r[i]),
-                            cp437[ord(r[i + 2])][0].encode('utf-8'),
-                            curses.color_pair(cp(ord(r[i + 3]), ord(r[i + 4])))
-                            | bold(ord(r[i + 3]))
-                        ])
-                    curses_commands.put(window.refresh)
-                    with dlock:
-                        if DATA:
-                            if 'grid' in DATA:
-                                grid_y, grid_x = DATA['grid']['y'], DATA['grid']['x']
-                                max_y, max_x = window.getmaxyx()
-                                for x in range(max_x):
-                                    for y in range(max_y):
-                                        if y >= grid_y or x >= grid_x:
-                                            curses_commands.put([window.addch, y, x, ord(' '), curses.color_pair(0)])
-                        DATA = ''
-                    curses_commands.put(window.refresh)
-                elif self.port == 25143:
-                    with dlock:
-                        try:
-                            DATA = json.loads(r)
-                        except json.error:
-                            pass
-            curses_commands.put(curses_shutdown)
+                        with dlock:
+                            if DATA:
+                                if 'grid' in DATA:
+                                    grid_y, grid_x = DATA['grid']['y'], DATA['grid']['x']
+                                    max_y, max_x = window.getmaxyx()
+                                    for x in range(max_x):
+                                        for y in range(max_y):
+                                            if y >= grid_y or x >= grid_x:
+                                                curses_commands.put([window.addch, y, x, ord(' '), curses.color_pair(0)])
+                            DATA = ''
+                        curses_commands.put(window.refresh)
+                    elif self.port == 25143:
+                        with dlock:
+                            try:
+                                DATA = json.loads(r)
+                            except json.error:
+                                pass
+                curses_commands.put(curses_shutdown)
+                while window:
+                    time.sleep(0.1)
+            except Exception as e:
+                logfile.write(traceback.format_exc())
+                logfile.write('\n')
+                raise
+
 
 if __name__ == '__main__':
     T(25143).start()
@@ -410,3 +420,4 @@ if __name__ == '__main__':
         try:
             curses_shutdown()
         except: pass
+        logfile.close()
