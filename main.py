@@ -323,6 +323,17 @@ def curses_shutdown():
     curses.endwin()
     window = None
 
+class render_thread(threading.Thread):
+    daemon = True
+    def __init__(self, command_groups):
+        super(render_thread, self).__init__()
+        self.command_groups = command_groups
+    def run(self):
+        for g in self.command_groups:
+            for c in g:
+                curses_commands.put(c)
+            time.sleep(0.05)
+
 class T(threading.Thread):
     daemon = True
     def __init__(self, port):
@@ -356,19 +367,22 @@ class T(threading.Thread):
                     if len(r) != pl:
                         break
                     if self.port == 25144:
+                        command_groups = [[]]
+                        commands = command_groups[0]
                         if opts.flash:
                             for i in range(0, len(r), 5):
-                                curses_commands.put([
+                                commands.append([
                                     window.addstr,
                                     ord(r[i + 1]),
                                     ord(r[i]),
                                     ' ',
                                     curses.color_pair(cp(0, 14))
                                 ])
-                            curses_commands.put(window.refresh)
-                            curses_commands.put([time.sleep, 0.05])
+                            commands.append(window.refresh)
+                            command_groups.append([])
+                            commands = command_groups[1]
                         for i in range(0, len(r), 5):
-                            curses_commands.put([
+                            commands.append([
                                 window.addstr,
                                 ord(r[i + 1]),
                                 ord(r[i]),
@@ -376,7 +390,12 @@ class T(threading.Thread):
                                 curses.color_pair(cp(ord(r[i + 3]), ord(r[i + 4])))
                                 | bold(ord(r[i + 3]))
                             ])
-                        curses_commands.put(window.refresh)
+                        commands.append(window.refresh)
+                        if opts.flash:
+                            render_thread(command_groups).start()
+                        else:
+                            for c in commands:
+                                curses_commands.put(c)
                         with dlock:
                             if DATA:
                                 if 'grid' in DATA:
