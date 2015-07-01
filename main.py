@@ -292,6 +292,9 @@ cp437 = {
     255: u"\u00A0",
 }
 
+def log(s):
+    logfile.write(str(s) + '\n')
+
 def cp(fg, bg):
     return fg + bg*16 + 1;
 
@@ -381,6 +384,10 @@ class T(threading.Thread):
                                         for y in range(max_y):
                                             if y >= grid_y or x >= grid_x:
                                                 curses_commands.put([window.addch, y, x, ord(' '), curses.color_pair(0)])
+                                if 'colors' in DATA:
+                                    for i, color in enumerate(DATA['colors']):
+                                        color = list(map(lambda c: int(c * 1000./255), color))
+                                        curses_commands.put([curses.init_color, color_map[i]] + color)
                             DATA = ''
                         curses_commands.put(window.refresh)
                     elif self.port == 25143:
