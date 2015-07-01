@@ -1,0 +1,23 @@
+body {
+    background-color: #eeeeee;
+}
+
+div.content {
+    background-color: white;
+    border: 1px solid #dddddd;
+    margin: 1em;
+    overflow: auto;
+    padding: 0 1em 1em;
+}
+
+div.content.center-column {
+    width: 25%;
+    min-width: 250px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 3em;
+}
+
+.center {
+    text-align: center;
+}
