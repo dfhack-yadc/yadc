@@ -350,6 +350,8 @@ class T(threading.Thread):
                     if len(pl) != 4:
                         break
                     pl = struct.unpack('<l', pl)[0]
+                    if pl == 0:
+                        continue
                     r = conn.recv(pl)
                     if len(r) != pl:
                         break
@@ -394,7 +396,7 @@ class T(threading.Thread):
                         with dlock:
                             try:
                                 DATA = json.loads(r)
-                            except json.error:
+                            except ValueError:
                                 pass
                 curses_commands.put(curses_shutdown)
                 while window:
