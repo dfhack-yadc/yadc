@@ -1,7 +1,7 @@
 package main
 
 import (
-    "fmt"
+    "encoding/json"
     "github.com/gorilla/context"
     "github.com/gorilla/mux"
     "github.com/gorilla/sessions"
@@ -11,21 +11,38 @@ import (
 
 var store = sessions.NewCookieStore()
 
-func startServer(addr *string) {
+func StartWebServer(addr string) {
     r := mux.NewRouter()
-    r.HandleFunc("/yadc/{info}", yadcHandler)
+    r.HandleFunc("/yadc/{path}", yadcHandler)
     r.PathPrefix("/").Handler(http.FileServer(http.Dir("./web/")))
     http.Handle("/", r)
-    err := http.ListenAndServe(*addr, context.ClearHandler(http.DefaultServeMux))
+    err := http.ListenAndServe(addr, context.ClearHandler(http.DefaultServeMux))
     if err != nil {
         log.Fatal(err)
     }
 }
 
-func yadcHandler(w http.ResponseWriter, r *http.Request) {
-    path := string(r.URL.Path)
-    if (path == "") {
-        path = "index.html"
+func encodejson(v interface{}) ([]byte, bool) {
+    j, err := json.Marshal(v)
+    if err != nil {
+        log.Printf("Could not encode JSON: %v\n", err)
+        return []byte(""), false
     }
-    fmt.Printf("Request %s\n", path)
+    return j, true
+}
+
+func yadcHandler(w http.ResponseWriter, r *http.Request) {
+    path := mux.Vars(r)["path"]
+    if path == "ports.js" {
+        j, ok := encodejson(ListPorts())
+        if ok {
+            w.Write([]byte("PORTS = "))
+            w.Write(j)
+        }
+    } else if path == "games.json" {
+        j, ok := encodejson(ListGames())
+        if ok {
+            w.Write(j)
+        }
+    }
 }
