@@ -9,6 +9,10 @@ type game struct {
     screen *hub
 }
 
+func (g *game) Active() bool {
+    return g.comm.dfconn != nil && g.screen.dfconn != nil
+}
+
 var games []*game
 
 func InitGames() {
@@ -23,6 +27,9 @@ func ListGames() []map[string]string {
         gmap["name"] = g.name
         gmap["df_version"] = g.df_version
         gmap["dfhack_version"] = g.dfhack_version
+        if g.Active() {
+            gmap["active"] = "true"
+        }
         list = append(list, gmap)
     }
     return list
