@@ -1,13 +1,5 @@
 package main
 
-type hub struct {
-    dfconn *connection
-    clients []*connection
-
-    addconn chan *connection
-    rmconn chan *connection
-}
-
 type game struct {
     id string
     name string
@@ -17,7 +9,11 @@ type game struct {
     screen *hub
 }
 
-var games []game
+var games []*game
+
+func InitGames() {
+    games = make([]*game, 0)
+}
 
 func ListGames() []map[string]string {
     list := make([]map[string]string, 0)
@@ -32,6 +28,24 @@ func ListGames() []map[string]string {
     return list
 }
 
-func StartHub(host string, comm_port int, screen_port int) {
-    games = make([]game, 0)
+func NewGame(id string) *game {
+    g := new(game)
+    g.id = id
+    g.comm = NewHub()
+    g.screen = NewHub()
+    return g
+}
+
+func FindGame(id string, create bool) *game {
+    for _, g := range games {
+        if g.id == id {
+            return g
+        }
+    }
+    if create {
+        g := NewGame(id)
+        games = append(games, g)
+        return g
+    }
+    return nil
 }
