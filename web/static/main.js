@@ -128,6 +128,7 @@
         }
         else if (hashData[0] == 'logout') {
             deauth();
+            _showPage('login');
         }
         else {
             if ($('.page#page-' + hashData[0]).length)
@@ -177,7 +178,6 @@
         creds = {};
         if (window.localStorage)
             localStorage.removeItem('yadc-creds');
-        showPage('login');
     }
 
     function validCreds() { return !!creds.username; }
