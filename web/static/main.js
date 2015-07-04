@@ -1,5 +1,7 @@
 (function($) {
-    var gameData = {};
+    var gameData = {},
+        creds = {},
+        hashData = {};
     ui = {
         GameListMessage: function(type, message) {
             if (type && message)
@@ -17,27 +19,123 @@
                 "DF " + game_data.df_version + "; DFHack " + game_data.dfhack_version
             ).appendTo(a);
             if (!game_data.active)
-                a.addClass('disabled').attr({title: "Disconnected"});
+                a.addClass('disabled').attr({title: "Disconnected"}).removeAttr('href');
             return a;
         },
+
+        Spinner: null,
+
+        spinnerOpts: {
+            lines: 13,
+            length: 28,
+            width: 14,
+            radius: 42,
+            scale: 0.3,
+            corners: 1,
+            color: '#000',
+            opacity: 0.2,
+            rotate: 0,
+            direction: 1,
+            speed: 1,
+            trail: 40,
+            fps: 20,
+            zIndex: 2e9,
+            className: 'spinner',
+            top: '50%',
+            left: '50%',
+            shadow: false,
+            hwaccel: false,
+            position: 'absolute'
+        },
+
     };
 
-    function showPage (name) {
-        var p = $('.page#page-' + name);
-        if (!p.length)
-            throw new Error('Invalid page: ' + name);
-        $('.page').hide();
-        p.show();
+    var pageHandlers = {
+        'login': {
+            'redirect': function() {
+                if (validCreds())
+                    return 'list';
+            }
+        },
+        'list': {
+            'redirect': function() {
+                if (!validCreds())
+                    return 'login';
+            }
+        },
+        'game': {
+            'redirect': function() {
+                if (!validCreds())
+                    return 'login';
+            },
+            'show': function() {
+                $('#spinner').show();
+                loadGames(function() {
+                    var g = findGame(hashData[1]);
+                    if (!g)
+                        return showPage('gameerr', 'unknown');
+                    if (!g.active)
+                        return showPage('gameerr', 'inactive');
+                    $('#cur-game').show().find('a').text(g.name);
+                    $('#spinner').hide();
+                });
+            },
+            'hide': function() {
+                $('#spinner').hide();
+                $('#cur-game').hide();
+            }
+        },
+        'gameerr': {
+            'show': function() {
+                $('#page-gameerr').find('.alert').hide();
+                var msg = $('#page-gameerr').find('#gameerr-' + hashData[1]);
+                if (!msg.length)
+                    msg = $('#gameerr-unknown');
+                msg.show();
+            }
+        }
     }
 
+    function showPage() {
+        window.location.hash = '#' + [].slice.apply(arguments).join('-');
+    }
+
+    var curPage;
     function onHashChange() {
-        var parts = location.hash.split('-');
-        if (parts.length == 1 && !parts[0]) {
-            showPage('select');
+        function _getPageHandler (page, event) {
+            var name = page.data('pageName');
+            return (pageHandlers[name] && pageHandlers[name][event]) || function(){};
+        }
+        function _showPage (name) {
+            var p = $('.page#page-' + name);
+            if (!p.length)
+                throw new Error('Invalid page: ' + name);
+            if (curPage) {
+                curPage.hide();
+                _getPageHandler(curPage, 'hide')();
+            }
+            var dest = _getPageHandler(p, 'redirect')();
+            if (dest) {
+                showPage(dest);
+                return;
+            }
+            p.show();
+            curPage = p;
+        }
+        hashData = location.hash.replace(/^#/, '').split('-');
+        if (hashData.length == 1 && !hashData[0]) {
+            _showPage('login');
+        }
+        else if (hashData[0] == 'logout') {
+            deauth();
         }
         else {
-            showPage('unknown');
+            if ($('.page#page-' + hashData[0]).length)
+                _showPage(hashData[0]);
+            else
+                _showPage('unknown');
         }
+        _getPageHandler(curPage, 'show')();
     }
 
     function findGame (id) {
@@ -45,6 +143,44 @@
             if (gameData[i].id == id)
                 return gameData[i];
     }
+
+    function auth() {
+        if (!creds.username) {
+            showPage('login');
+            return false;
+        }
+        else {
+            localStorage.setItem('yadc-creds', JSON.stringify(creds));
+            return true;
+        }
+    }
+
+    function authForm(form) {
+        creds = {
+            username: form.find('#username').val()
+        }
+        if (auth())
+            showPage('list');
+    }
+
+    function authLocalStorage() {
+        if (!window.localStorage || !window.JSON)
+            return false;
+        var item = localStorage.getItem('yadc-creds');
+        if (!item)
+            return false;
+        creds = JSON.parse(item);
+        return auth();
+    }
+
+    function deauth() {
+        creds = {};
+        if (window.localStorage)
+            localStorage.removeItem('yadc-creds');
+        showPage('login');
+    }
+
+    function validCreds() { return !!creds.username; }
 
     function loadGames (callback) {
         $.getJSON('/yadc/games.json', function(data) {
@@ -70,11 +206,29 @@
     $(window).on('hashchange', onHashChange);
 
     $(function() {
-        onHashChange();
+        ui.Spinner = new Spinner(ui.spinnerOpts).spin($('#spinner')[0]);
+        $('.page').each(function (_, elt) {
+            $(elt).data({pageName: $(elt).attr('id').replace('page-', '')});
+        });
+        $('.hidden').hide().removeClass('hidden');
+        if (!authLocalStorage()) {
+            location.hash = '';
+            showPage('login');
+        }
+        else {
+            onHashChange();
+        }
         if (!window.PORTS) {
             ui.GameListMessage('danger', 'Missing port information');
             return;
         }
         loadGames();
-    })
+        $('#login-form').submit(function(e) {
+            e.preventDefault();
+            authForm($(this));
+        });
+        $(document).on('click', '.no-click', function(e) {
+            e.preventDefault();
+        });
+    });
 })(jQuery);

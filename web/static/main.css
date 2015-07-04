@@ -1,6 +1,5 @@
 body {
     background-color: #eeeeee;
-    padding-top: 1em;
 }
 
 div.content {
@@ -17,6 +16,10 @@ div.content.center-column {
     margin-left: auto;
     margin-right: auto;
     margin-top: 3em;
+}
+
+form {
+    padding: 0.5em 0px;
 }
 
 .center {
