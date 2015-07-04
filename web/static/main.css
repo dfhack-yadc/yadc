@@ -1,5 +1,6 @@
 body {
     background-color: #eeeeee;
+    padding-top: 1em;
 }
 
 div.content {
@@ -11,8 +12,8 @@ div.content {
 }
 
 div.content.center-column {
-    width: 25%;
-    min-width: 250px;
+    width: 30%;
+    min-width: 300px;
     margin-left: auto;
     margin-right: auto;
     margin-top: 3em;

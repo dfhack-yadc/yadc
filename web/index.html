@@ -8,14 +8,35 @@
     <script type="text/javascript" src="/static/bootstrap/bootstrap.min.js"></script>
     <script type="text/javascript" src="/yadc/ports.js"></script>
     <script type="text/javascript" src="/static/main.js"></script>
+    <style type="text/css">
+    div.page {
+      display: none;
+    }
+    </style>
   </head>
   <body>
 
-    <div class="content center-column">
-      <h2 class="center">Select a game</h2>
-      <div id="game-list-form">
-        <div class="alert alert-info" id="game-list-status">Loading...</div>
-        <div class="list-group" id="game-list"></div>
+    <div class="page" id="page-select">
+      <div class="content center-column">
+        <h2 class="center">Select a game</h2>
+        <div id="game-list-form">
+          <div class="alert alert-info" id="game-list-status">Loading...</div>
+          <div class="list-group" id="game-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-game">
+
+    </div>
+
+    <div class="page" id="page-unknown">
+      <div class="container">
+        <div class="row">
+          <div class="alert alert-danger">
+            You have accessed an invalid page. <a class="btn btn-default" href='#'>Return to main page</a>
+          </div>
+        </div>
       </div>
     </div>
 
