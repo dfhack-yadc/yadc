@@ -3,6 +3,8 @@
         creds = {},
         hashData = {};
     ui = {
+        events: $({}),
+
         GameListMessage: function(type, message) {
             if (type && message)
                 $('#game-list-status').attr('class', 'alert alert-' + type).text(message);
@@ -103,6 +105,8 @@
     var curPage;
     function onHashChange() {
         function _getPageHandler (page, event) {
+            if (!page)
+                return function(){};
             var name = page.data('pageName');
             return (pageHandlers[name] && pageHandlers[name][event]) || function(){};
         }
@@ -121,6 +125,7 @@
             }
             p.show();
             curPage = p;
+            ui.events.trigger('page.show', name);
         }
         hashData = location.hash.replace(/^#/, '').split('-');
         if (hashData.length == 1 && !hashData[0]) {
@@ -204,6 +209,13 @@
     setInterval(loadGames, 60000);
 
     $(window).on('hashchange', onHashChange);
+
+    ui.events.on('page.show', function() {
+        if (creds && creds.username)
+            $('#cur-user').show().find('a').text(creds.username);
+        else
+            $('#cur-user').hide();
+    })
 
     $(function() {
         ui.Spinner = new Spinner(ui.spinnerOpts).spin($('#spinner')[0]);
