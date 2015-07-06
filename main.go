@@ -27,11 +27,10 @@ func main() {
         host = "localhost"
     }
     InitGames()
-    done := make(chan bool)
+    done := NewSem()
     go StartNet(host, comm_port, screen_port, done)
     go StartWebServer(host, web_port, done)
-    <-done
-    <-done
+    done.Wait()
 }
 
 func ListPorts() *map[string]int {

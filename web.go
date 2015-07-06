@@ -12,7 +12,9 @@ import (
 
 var store = sessions.NewCookieStore()
 
-func StartWebServer(host string, port int, done chan <- bool) {
+func StartWebServer(host string, port int, done *sem) {
+    done.Inc()
+    defer done.Dec()
     addr := host + ":" + strconv.Itoa(port)
     log.Printf("Serving HTTP on %s\n", addr)
     r := mux.NewRouter()

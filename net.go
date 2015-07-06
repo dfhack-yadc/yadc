@@ -23,39 +23,44 @@ type hub struct {
     dfconn *net.Conn
     clients []*connection
 
-    addchan chan *connection
-    rmchan chan *connection
+    addconn chan *connection
+    rmconn chan *connection
+    broadcast chan []byte
 }
 
 type comm_data struct {
-    Info comm_data_info `json:"info"`
-}
-
-type comm_data_info struct {
-    Df_version string `json:"df_version"`
-    Dfhack_version string `json:"dfhack_version"`
-    Name string `json:"name"`
+    Info struct {
+        Df_version string `json:"df_version"`
+        Dfhack_version string `json:"dfhack_version"`
+        Name string `json:"name"`
+    } `json:"info"`
 }
 
 func NewHub() *hub {
     h := new(hub)
     h.clients = make([]*connection, 0)
-    h.addchan = make(chan *connection)
-    h.rmchan = make(chan *connection)
+    h.addconn = make(chan *connection)
+    h.rmconn = make(chan *connection)
+    h.broadcast = make(chan []byte)
     return h
 }
 
-func StartServer(host string, port int, handler func(net.Conn), done chan <-bool) {
+func (h *hub) Run() {
+
+}
+
+func StartServer(host string, port int, handler func(net.Conn), done *sem) {
     addr := host + ":" + strconv.Itoa(port)
     sock, err := net.Listen("tcp", addr)
     if err != nil {
         log.Fatalf("Could not bind to %s: %v\n", addr, err)
     }
     log.Printf("Listening on %s\n", addr)
+    done.Inc()
     go func(){
         defer log.Printf("Shutting down %s\n", addr)
         defer sock.Close()
-        defer func(){done <-true}()
+        defer done.Dec()
         for {
             conn, err := sock.Accept()
             if err != nil {
@@ -64,17 +69,11 @@ func StartServer(host string, port int, handler func(net.Conn), done chan <-bool
             go handler(conn)
         }
     }()
-    server_count++
 }
 
-func StartNet(host string, comm_port int, screen_port int, done chan <- bool) {
-    server_count = 0
-    ch := make(chan bool)
-    StartServer("localhost", comm_port, DFCommHandler, ch)
-    StartServer("localhost", screen_port, DFScreenHandler, ch)
-    for i := 0; i < server_count; i++ {
-        <-ch
-    }
+func StartNet(host string, comm_port int, screen_port int, done *sem) {
+    StartServer("localhost", comm_port, DFCommHandler, done)
+    StartServer("localhost", screen_port, DFScreenHandler, done)
 }
 
 func readInt32(data []byte) (ret int32) {
