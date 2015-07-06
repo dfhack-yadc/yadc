@@ -1,5 +1,5 @@
 (function($) {
-    var gameData = {},
+    var gameData = [],
         creds = {},
         hashData = {};
     ui = {
@@ -190,6 +190,8 @@
     function loadGames (callback) {
         $.getJSON('/yadc/games.json', function(data) {
             gameData = data;
+            if (callback && callback.call)
+                callback();
             if (!data.length) {
                 ui.GameListMessage('warning', 'No games');
                 return;
@@ -202,8 +204,6 @@
                         e.preventDefault();
                 });
             }
-            if (callback && callback.call)
-                callback();
         });
     }
     setInterval(loadGames, 60000);
