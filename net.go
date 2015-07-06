@@ -77,11 +77,9 @@ func StartNet(host string, comm_port int, screen_port int, done chan <- bool) {
     }
 }
 
-func readInt32(data []byte) int32 {
-    var ret int32
-    b := bytes.NewBuffer(data)
-    binary.Read(b, binary.LittleEndian, &ret)
-    return ret
+func readInt32(data []byte) (ret int32) {
+    binary.Read(bytes.NewBuffer(data), binary.LittleEndian, &ret)
+    return
 }
 
 func connReadInt32(conn net.Conn) (int32, bool) {

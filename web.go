@@ -41,6 +41,7 @@ func yadcHandler(w http.ResponseWriter, r *http.Request) {
         if ok {
             w.Write([]byte("PORTS = "))
             w.Write(j)
+            w.Write([]byte(";"))
         }
     } else if path == "games.json" {
         j, ok := encodejson(ListGames())
