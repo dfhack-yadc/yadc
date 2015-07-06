@@ -2,7 +2,6 @@ package main
 
 import (
     "encoding/json"
-    "fmt"
     "github.com/gorilla/context"
     "github.com/gorilla/mux"
     "github.com/gorilla/sessions"
@@ -14,8 +13,8 @@ import (
 var store = sessions.NewCookieStore()
 
 func StartWebServer(host string, port int, done chan <- bool) {
-    addr := host + ":" + strconv.Itoa(http_port)
-    fmt.Printf("Serving HTTP on %s\n", addr)
+    addr := host + ":" + strconv.Itoa(port)
+    log.Printf("Serving HTTP on %s\n", addr)
     r := mux.NewRouter()
     r.HandleFunc("/yadc/{path}", yadcHandler)
     r.PathPrefix("/").Handler(http.FileServer(http.Dir("./web/")))

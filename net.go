@@ -67,11 +67,11 @@ func StartServer(host string, port int, handler func(net.Conn), done chan <-bool
     server_count++
 }
 
-func StartNet(host string, comm_port int, screen_port int, local_comm_port int, local_screen_port int, done chan <- bool) {
+func StartNet(host string, comm_port int, screen_port int, done chan <- bool) {
     server_count = 0
     ch := make(chan bool)
-    StartServer("localhost", local_comm_port, DFCommHandler, ch)
-    StartServer("localhost", local_screen_port, DFScreenHandler, ch)
+    StartServer("localhost", comm_port, DFCommHandler, ch)
+    StartServer("localhost", screen_port, DFScreenHandler, ch)
     for i := 0; i < server_count; i++ {
         <-ch
     }
