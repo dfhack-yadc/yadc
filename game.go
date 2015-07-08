@@ -7,10 +7,25 @@ type game struct {
     dfhack_version string
     comm *hub
     screen *hub
+
+    screen_data screen_data
 }
 
 func (g *game) Active() bool {
     return g.comm.dfconn != nil && g.screen.dfconn != nil
+}
+
+type screen_data struct {
+    raw []byte
+    dims struct {
+        // Screen dimensions in DF are capped at 256
+        x uint16
+        y uint16
+    }
+}
+
+func (sd *screen_data) rawOffset(x uint8, y uint8) uint {
+    return ((uint(x) * 256) + uint(y)) * 5
 }
 
 var games []*game
@@ -36,11 +51,14 @@ func ListGames() []map[string]string {
 }
 
 func NewGame(id string) *game {
-    g := new(game)
-    g.id = id
-    g.comm = NewHub()
-    g.screen = NewHub()
-    return g
+    return &game{
+        id: id,
+        comm: NewHub(),
+        screen: NewHub(),
+        screen_data: screen_data{
+            raw: make([]byte, 256 * 256 * 5),
+        },
+    }
 }
 
 func FindGame(id string, create bool) *game {

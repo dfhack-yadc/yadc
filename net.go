@@ -34,6 +34,10 @@ type comm_data struct {
         Dfhack_version string `json:"dfhack_version"`
         Name string `json:"name"`
     } `json:"info"`
+    Dims struct {
+        X int `json:"x"`
+        Y int `json:"y"`
+    } `json:"dims"`
 }
 
 func NewHub() *hub {
@@ -135,7 +139,7 @@ func DFCommHandler(conn net.Conn) {
         var data comm_data
         err := json.Unmarshal(raw_data, &data)
         if err != nil {
-            log.Printf("Invalid JSON: %v\n", err)
+            log.Printf("%s: Invalid JSON: %v\n", df_id, err)
         } else {
             if data.Info.Df_version != "" {
                 game.df_version = data.Info.Df_version
@@ -145,6 +149,16 @@ func DFCommHandler(conn net.Conn) {
             }
             if data.Info.Name != "" {
                 game.name = data.Info.Name
+            }
+            x, y := data.Dims.X, data.Dims.Y
+            if x != 0 && y != 0 {
+                if x > 256 || y > 256 || x < 80 || y < 25 {
+                    log.Printf("%s: Invalid dimensions: %d, %d\n", df_id, x, y)
+                } else {
+                    game.screen_data.dims.x = uint16(x)
+                    game.screen_data.dims.y = uint16(y)
+                    log.Printf("%s: Resized to %d, %d\n", df_id, x, y)
+                }
             }
         }
     }
@@ -170,9 +184,12 @@ func DFScreenHandler(conn net.Conn) {
             return
         }
         data, ok := readBytes(conn, int(buflength))
-        _ = data
         if !ok {
             return
+        }
+        for i := 0; i < len(data); i += 5 {
+            off := game.screen_data.rawOffset(data[i], data[i + 1])
+            copy(game.screen_data.raw[off:off+5], data[i:i+5])
         }
     }
 }
