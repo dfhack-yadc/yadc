@@ -19,7 +19,7 @@ func StartWebServer(host string, port int, done *sem) {
     log.Printf("Serving HTTP on %s\n", addr)
     r := mux.NewRouter()
     r.HandleFunc("/yadc/{path}", yadcHandler)
-    r.PathPrefix("/").Handler(http.FileServer(http.Dir("./web/")))
+    r.PathPrefix("/").Handler(http.FileServer(assetFS()))
     http.Handle("/", r)
     err := http.ListenAndServe(addr, context.ClearHandler(http.DefaultServeMux))
     if err != nil {
