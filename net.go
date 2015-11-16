@@ -21,11 +21,24 @@ type connection struct {
 
 type hub struct {
     dfconn *net.Conn
-    clients []*connection
+    clients map[*connection]bool
 
     addconn chan *connection
     rmconn chan *connection
     broadcast chan []byte
+}
+
+func NewHub() *hub {
+    return &hub{
+        clients: make(map[*connection]bool),
+        addconn: make(chan *connection),
+        rmconn: make(chan *connection),
+        broadcast: make(chan []byte),
+    }
+}
+
+func (h *hub) Broadcast() {
+
 }
 
 type comm_data struct {
@@ -38,19 +51,6 @@ type comm_data struct {
         X int `json:"x"`
         Y int `json:"y"`
     } `json:"dims"`
-}
-
-func NewHub() *hub {
-    h := new(hub)
-    h.clients = make([]*connection, 0)
-    h.addconn = make(chan *connection)
-    h.rmconn = make(chan *connection)
-    h.broadcast = make(chan []byte)
-    return h
-}
-
-func (h *hub) Run() {
-
 }
 
 func StartServer(host string, port int, handler func(net.Conn), done *sem) {
