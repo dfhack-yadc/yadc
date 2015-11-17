@@ -12,14 +12,20 @@ import (
 
 var store = sessions.NewCookieStore()
 
-func StartWebServer(host string, port int, done *sem) {
+func StartWebServer(host string, port int, serve_fs bool, done *sem) {
     done.Inc()
     defer done.Dec()
     addr := host + ":" + strconv.Itoa(port)
     log.Printf("Serving HTTP on %s\n", addr)
     r := mux.NewRouter()
     r.HandleFunc("/yadc/{path}", yadcHandler)
-    r.PathPrefix("/").Handler(http.FileServer(assetFS()))
+    var fs http.FileSystem
+    if (serve_fs) {
+        fs = http.Dir("./web/")
+    } else {
+        fs = assetFS()
+    }
+    r.PathPrefix("/").Handler(http.FileServer(fs))
     http.Handle("/", r)
     err := http.ListenAndServe(addr, context.ClearHandler(http.DefaultServeMux))
     if err != nil {
