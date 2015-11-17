@@ -16,7 +16,7 @@ func StartWebServer(host string, port int, serve_fs bool, done *sem) {
     done.Inc()
     defer done.Dec()
     addr := host + ":" + strconv.Itoa(port)
-    log.Printf("Serving HTTP on %s\n", addr)
+    log.Printf("Serving HTTP on %s (from %s)\n", addr, ifexpr(serve_fs, "filesystem", "package"))
     r := mux.NewRouter()
     r.HandleFunc("/yadc/{path}", yadcHandler)
     var fs http.FileSystem

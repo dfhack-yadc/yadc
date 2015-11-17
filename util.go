@@ -1,5 +1,13 @@
 package main
 
+func ifexpr (expr bool, a interface{}, b interface{}) (interface{}) {
+    if expr {
+        return a
+    } else {
+        return b
+    }
+}
+
 type sem struct {
     count int
     ch chan bool
