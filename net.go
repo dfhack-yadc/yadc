@@ -12,6 +12,7 @@ import (
 
 var (
     server_count int
+    read_max = 2000000
 )
 
 type connection struct {
@@ -96,6 +97,10 @@ func connReadInt32(conn net.Conn) (int32, bool) {
 func readBytes(conn net.Conn, count int) ([]byte, bool) {
     if count == 0 {
         return make([]byte, 0), true
+    }
+    if count > read_max {
+        log.Printf("Read failed: Maximum packet length exceeded (%d > %d)\n", count, read_max)
+        return nil, false
     }
     buf := make([]byte, count)
     length, err := conn.Read(buf)
