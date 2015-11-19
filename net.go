@@ -149,6 +149,7 @@ func DFCommHandler(conn net.Conn) {
             }
             if data.Info.Name != "" {
                 game.name = data.Info.Name
+                game.valid = true
             }
             x, y := data.Dims.X, data.Dims.Y
             if x != 0 && y != 0 {

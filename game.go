@@ -1,6 +1,7 @@
 package main
 
 type game struct {
+    valid bool
     id string
     name string
     df_version string
@@ -37,6 +38,9 @@ func InitGames() {
 func ListGames() []map[string]string {
     list := make([]map[string]string, 0)
     for _, g := range games {
+        if !g.valid {
+            continue
+        }
         gmap := make(map[string]string)
         gmap["id"] = g.id
         gmap["name"] = g.name
@@ -52,6 +56,7 @@ func ListGames() []map[string]string {
 
 func NewGame(id string) *game {
     return &game{
+        valid: false,
         id: id,
         comm: NewHub(),
         screen: NewHub(),
