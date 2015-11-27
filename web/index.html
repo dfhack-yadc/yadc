@@ -13,6 +13,9 @@
     div.page, .hidden {
       display: none;
     }
+    .cursor-pointer {
+      cursor: pointer;
+    }
     </style>
   </head>
   <body>
@@ -35,9 +38,9 @@
             <li class="active hidden no-click" id="cur-game"><a></a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
-            <li class="hidden no-click" id="cur-user"><a>User</a></li>
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Actions <span class="caret"></span></a>
+            <li class="hidden no-click" id="cur-user"><a>Unknown user</a></li>
+            <li id="actions-menu" class="dropdown">
+              <a class="dropdown-toggle cursor-pointer" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Actions <span class="caret"></span></a>
               <ul class="dropdown-menu">
                 <li><a href="#list">Select game</a></li>
                 <li><a href="#logout">Log out</a></li>

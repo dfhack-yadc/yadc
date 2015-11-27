@@ -54,23 +54,29 @@
 
     var pageHandlers = {
         'login': {
-            'redirect': function() {
+            redirect: function() {
                 if (validCreds())
                     return 'list';
+            },
+            show: function() {
+                $('#actions-menu').addClass('disabled').find('a.dropdown-toggle').attr('data-toggle', '');
+            },
+            hide: function() {
+                $('#actions-menu').removeClass('disabled').find('a.dropdown-toggle').attr('data-toggle', 'dropdown');
             }
         },
         'list': {
-            'redirect': function() {
+            redirect: function() {
                 if (!validCreds())
                     return 'login';
             }
         },
         'game': {
-            'redirect': function() {
+            redirect: function() {
                 if (!validCreds())
                     return 'login';
             },
-            'show': function() {
+            show: function() {
                 $('#spinner').show();
                 loadGames(function() {
                     var g = findGame(hashData[1]);
@@ -82,13 +88,13 @@
                     $('#spinner').hide();
                 });
             },
-            'hide': function() {
+            hide: function() {
                 $('#spinner').hide();
                 $('#cur-game').hide();
             }
         },
         'gameerr': {
-            'show': function() {
+            show: function() {
                 $('#page-gameerr').find('.alert').hide();
                 var msg = $('#page-gameerr').find('#gameerr-' + hashData[1]);
                 if (!msg.length)
