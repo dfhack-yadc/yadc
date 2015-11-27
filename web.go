@@ -5,12 +5,16 @@ import (
     "github.com/gorilla/context"
     "github.com/gorilla/mux"
     "github.com/gorilla/sessions"
+    "io/ioutil"
     "log"
     "net/http"
     "strconv"
 )
 
-var store = sessions.NewCookieStore()
+var (
+    fs http.FileSystem
+    store = sessions.NewCookieStore()
+)
 
 func StartWebServer(host string, port int, serve_fs bool, done *sem) {
     done.Inc()
@@ -18,8 +22,8 @@ func StartWebServer(host string, port int, serve_fs bool, done *sem) {
     addr := host + ":" + strconv.Itoa(port)
     log.Printf("Serving HTTP on %s (from %s)\n", addr, ifexpr(serve_fs, "filesystem", "package"))
     r := mux.NewRouter()
+    r.NotFoundHandler = http.HandlerFunc(custom404Handler)
     r.HandleFunc("/yadc/{path}", yadcHandler)
-    var fs http.FileSystem
     if (serve_fs) {
         fs = http.Dir("./web/")
     } else {
@@ -42,6 +46,21 @@ func encodejson(v interface{}) ([]byte, bool) {
     return j, true
 }
 
+func custom404Handler(w http.ResponseWriter, r *http.Request) {
+    w.WriteHeader(404)
+    path := "/404.html"
+    f, err := fs.Open(path)
+    if err == nil {
+        contents, err := ioutil.ReadAll(f)
+        if err == nil {
+            w.Write(contents)
+        }
+    }
+    if err != nil {
+        w.Write([]byte("not found and could not open " + path + ": " + err.Error()))
+    }
+}
+
 func yadcHandler(w http.ResponseWriter, r *http.Request) {
     path := mux.Vars(r)["path"]
     if path == "ports.js" {
@@ -56,5 +75,8 @@ func yadcHandler(w http.ResponseWriter, r *http.Request) {
         if ok {
             w.Write(j)
         }
+    } else {
+        w.WriteHeader(404)
+        w.Write([]byte("not found"))
     }
 }

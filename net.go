@@ -105,10 +105,12 @@ func readBytes(conn net.Conn, count int) ([]byte, bool) {
     buf := make([]byte, count)
     length, err := conn.Read(buf)
     if err != nil {
+        buf = buf[:0]
         log.Printf("Read failed: %v\n", err)
         return nil, false
     }
     if length != count {
+        buf = buf[:0]
         log.Printf("Read failed: Expected %d bytes, got %d\n", count, length)
         return nil, false
     }
