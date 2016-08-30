@@ -2,6 +2,9 @@
     var gameData = [],
         creds = {},
         hashData = {};
+
+    comm = {};
+
     ui = {
         events: $({}),
 
@@ -50,20 +53,27 @@
             position: 'absolute'
         },
 
+        ActionsMenu: {
+            enable: function() {
+                $('#actions-menu').removeClass('disabled').find('a.dropdown-toggle').attr('data-toggle', 'dropdown');
+            },
+            disable: function() {
+                $('#actions-menu').addClass('disabled').find('a.dropdown-toggle').attr('data-toggle', '');
+            }
+        },
+
     };
 
     var pageHandlers = {
+        'nosockets': {
+            actions_disabled: true,
+        },
         'login': {
             redirect: function() {
                 if (validCreds())
                     return 'list';
             },
-            show: function() {
-                $('#actions-menu').addClass('disabled').find('a.dropdown-toggle').attr('data-toggle', '');
-            },
-            hide: function() {
-                $('#actions-menu').removeClass('disabled').find('a.dropdown-toggle').attr('data-toggle', 'dropdown');
-            }
+            actions_disabled: true,
         },
         'list': {
             redirect: function() {
@@ -105,7 +115,9 @@
     }
 
     function showPage() {
-        window.location.hash = '#' + [].slice.apply(arguments).join('-');
+        var hash = '#' + [].slice.apply(arguments).join('-');
+        if (hash != window.location.hash)
+            window.location.hash = hash;
     }
 
     var curPage;
@@ -118,6 +130,7 @@
         }
         function _showPage (name) {
             var p = $('.page#page-' + name);
+            var pdata = pageHandlers[p.data('pageName')] || {};
             if (!p.length)
                 throw new Error('Invalid page: ' + name);
             if (curPage) {
@@ -129,12 +142,19 @@
                 showPage(dest);
                 return;
             }
+            if (pdata.actions_disabled)
+                ui.ActionsMenu.disable();
+            else
+                ui.ActionsMenu.enable();
             p.show();
             curPage = p;
             ui.events.trigger('page.show', name);
         }
         hashData = location.hash.replace(/^#/, '').split('-');
-        if (hashData.length == 1 && !hashData[0]) {
+        if (!hasSocketSupport()) {
+            _showPage('nosockets');
+        }
+        else if (hashData.length <= 1 && !hashData[0]) {
             _showPage('login');
         }
         else if (hashData[0] == 'logout') {
@@ -229,6 +249,11 @@
             $(elt).data({pageName: $(elt).attr('id').replace('page-', '')});
         });
         $('.hidden').hide().removeClass('hidden');
+        if (!hasSocketSupport()) {
+            showPage('nosockets');
+            return;
+        }
+        // comm.main = MainSocket();
         if (!authLocalStorage()) {
             location.hash = '';
             showPage('login');

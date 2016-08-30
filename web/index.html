@@ -8,6 +8,7 @@
     <script type="text/javascript" src="/static/bootstrap/bootstrap.min.js"></script>
     <script type="text/javascript" src="/static/spin.min.js"></script>
     <script type="text/javascript" src="/yadc/ports.js"></script>
+    <script type="text/javascript" src="/static/sock.js"></script>
     <script type="text/javascript" src="/static/main.js"></script>
     <style type="text/css">
     div.page, .hidden {
@@ -53,6 +54,16 @@
 
     <div id="spinner" class="hidden"></div>
 
+    <div class="page" id="page-nosockets">
+      <div class="container">
+        <div class="row">
+          <div class="alert alert-danger">
+            Your browser does not support web sockets.
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="page" id="page-login">
       <div class="content center-column">
         <h2 class="center">Log in</h2>
@@ -79,7 +90,17 @@
     </div>
 
     <div class="page" id="page-game">
-
+      <div class="sidebar-chat">
+        <h4>Chat</h4>
+        <div style="position: relative">
+          <div style="height: 80%">
+            <div class="chat-log" style="">Foo</div>
+            <form style="position: absolute; bottom:0; width:100%">
+              <input type="text" class="form-control" cols="1"></input>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="page" id="page-gameerr">

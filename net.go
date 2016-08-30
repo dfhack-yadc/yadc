@@ -13,6 +13,10 @@ import (
 var (
     server_count int
     read_max = 2000000
+    upgrader = websocket.Upgrader{
+        ReadBufferSize:  1024,
+        WriteBufferSize: 1024,
+    }
 )
 
 type connection struct {
@@ -42,7 +46,16 @@ func (h *hub) Broadcast() {
 
 }
 
-type comm_data struct {
+type main_comm_data struct {
+    Auth struct {
+        Username string `json:"username"`
+        Password string `json:"password"`
+        Logged_in bool `json:"logged_in"`
+        Id string `json:"id"`
+    } `json:"auth"`
+}
+
+type df_comm_data struct {
     Info struct {
         Df_version string `json:"df_version"`
         Dfhack_version string `json:"dfhack_version"`
@@ -143,7 +156,7 @@ func DFCommHandler(conn net.Conn) {
         if buflength == 0 {
             continue
         }
-        var data comm_data
+        var data df_comm_data
         err := json.Unmarshal(raw_data, &data)
         if err != nil {
             log.Printf("%s: Invalid JSON: %v\n", df_id, err)
@@ -201,3 +214,17 @@ func DFScreenHandler(conn net.Conn) {
         }
     }
 }
+
+
+// func serveWs(w http.ResponseWriter, r *http.Request) {
+//     ws, err := upgrader.Upgrade(w, r, nil)
+//     if err != nil {
+//         log.Println(err)
+//         return
+//     }
+//     c := &connection{send: make(chan []byte, 256), ws: ws}
+//     h.register <- c
+//     go c.writePump()
+//     c.readPump()
+// }
+
