@@ -138,10 +138,10 @@ func DFCommHandler(conn net.Conn) {
     }
     game := FindGame(string(df_id), true)
     if game.comm.dfconn != nil {
-        log.Printf("DF %s comm connection already exists\n", df_id)
+        log.Printf("%s: comm connection already exists\n", df_id)
         return
     }
-    log.Printf("New connection: %s (comm)\n", df_id)
+    log.Printf("%s: New connection (comm)\n", df_id)
     game.comm.dfconn = &conn
     defer func(){ game.comm.dfconn = nil }()
     for {
@@ -193,10 +193,10 @@ func DFScreenHandler(conn net.Conn) {
     }
     game := FindGame(string(df_id), true)
     if game.screen.dfconn != nil {
-        log.Printf("DF %s screen connection already exists\n", df_id)
+        log.Printf("%s: screen connection already exists\n", df_id)
         return
     }
-    log.Printf("New connection: %s (screen)\n", df_id)
+    log.Printf("%s: New connection (screen)\n", df_id)
     game.screen.dfconn = &conn
     defer func(){ game.screen.dfconn = nil }()
     for {
