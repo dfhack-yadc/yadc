@@ -28,7 +28,6 @@ func main() {
     if local_only {
         host = "localhost"
     }
-    InitGames()
     done := NewSem()
     go StartNet(host, comm_port, screen_port, done)
     go StartWebServer(host, web_port, serve_fs, done)

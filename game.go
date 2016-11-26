@@ -1,5 +1,9 @@
 package main
 
+import (
+    "sync"
+)
+
 type game struct {
     valid bool
     id string
@@ -29,11 +33,10 @@ func (sd *screen_data) rawOffset(x uint8, y uint8) uint {
     return ((uint(x) * 256) + uint(y)) * 5
 }
 
-var games []*game
-
-func InitGames() {
-    games = make([]*game, 0)
-}
+var (
+    games []*game
+    games_mutex sync.RWMutex
+)
 
 func ListGames() []map[string]string {
     list := make([]map[string]string, 0)
@@ -67,6 +70,15 @@ func NewGame(id string) *game {
 }
 
 func FindGame(id string, create bool) *game {
+    if (create) {
+        // lock for writing, to be safe
+        games_mutex.Lock()
+        defer games_mutex.Unlock()
+    } else {
+        // lock for reading
+        games_mutex.RLock()
+        defer games_mutex.RUnlock()
+    }
     for _, g := range games {
         if g.id == id {
             return g
