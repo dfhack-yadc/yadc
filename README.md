@@ -5,6 +5,10 @@ A DFterm clone
 
 **Dependencies**
 
+* [gorilla/context](github.com/gorilla/context)
+* [gorilla/mux](github.com/gorilla/mux)
+* [gorilla/sessions](github.com/gorilla/sessions)
+* [gorilla/websocket](github.com/gorilla/websocket)
 * [go-bindata-assetfs](https://github.com/elazarl/go-bindata-assetfs)
 * [goxc](https://github.com/laher/goxc) (optional; for cross-compiling more
   easily)

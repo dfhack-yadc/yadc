@@ -1,0 +1,6 @@
+github.com/jteeuwen/go-bindata/...
+github.com/elazarl/go-bindata-assetfs/...
+github.com/gorilla/context
+github.com/gorilla/mux
+github.com/gorilla/sessions
+github.com/gorilla/websocket
