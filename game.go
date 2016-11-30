@@ -1,6 +1,7 @@
 package main
 
 import (
+    "fmt"
     "sync"
 )
 
@@ -14,6 +15,11 @@ type game struct {
     screen *hub
 
     screen_data screen_data
+}
+
+func (g *game) String() string {
+    return fmt.Sprintf("Game %s (%s)", g.id,
+        ifexpr(g.name != "", g.name, "unknown"))
 }
 
 func (g *game) Active() bool {

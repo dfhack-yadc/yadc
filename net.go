@@ -71,18 +71,18 @@ func StartServer(host string, port int, handler func(net.Conn), done *sem) {
     addr := host + ":" + strconv.Itoa(port)
     sock, err := net.Listen("tcp", addr)
     if err != nil {
-        log.Fatalf("Could not bind to %s: %v\n", addr, err)
+        log.Fatalf("Could not bind to %s: %v", addr, err)
     }
-    log.Printf("Listening on %s\n", addr)
+    log.Printf("Listening on %s", addr)
     done.Inc()
     go func(){
-        defer log.Printf("Shutting down %s\n", addr)
+        defer log.Printf("Shutting down %s", addr)
         defer sock.Close()
         defer done.Dec()
         for {
             conn, err := sock.Accept()
             if err != nil {
-                log.Fatalf("Failed to accept connection on %s: %v\n", addr, err)
+                log.Fatalf("Failed to accept connection on %s: %v", addr, err)
             }
             go handler(conn)
         }
@@ -112,19 +112,19 @@ func readBytes(conn net.Conn, count int) ([]byte, bool) {
         return make([]byte, 0), true
     }
     if count > read_max {
-        log.Printf("Read failed: Maximum packet length exceeded (%d > %d)\n", count, read_max)
+        log.Printf("Read failed: Maximum packet length exceeded (%d > %d)", count, read_max)
         return nil, false
     }
     buf := make([]byte, count)
     length, err := conn.Read(buf)
     if err != nil {
         buf = buf[:0]
-        log.Printf("Read failed: %v\n", err)
+        log.Printf("Read failed: %v", err)
         return nil, false
     }
     if length != count {
         buf = buf[:0]
-        log.Printf("Read failed: Expected %d bytes, got %d\n", count, length)
+        log.Printf("Read failed: Expected %d bytes, got %d", count, length)
         return nil, false
     }
     return buf, true
@@ -138,10 +138,10 @@ func DFCommHandler(conn net.Conn) {
     }
     game := FindGame(string(df_id), true)
     if game.comm.dfconn != nil {
-        log.Printf("%s: comm connection already exists\n", df_id)
+        log.Printf("%s: comm connection already exists", game)
         return
     }
-    log.Printf("%s: New connection (comm)\n", df_id)
+    log.Printf("%s: New connection (comm)", game)
     game.comm.dfconn = &conn
     defer func(){ game.comm.dfconn = nil }()
     for {
@@ -159,7 +159,7 @@ func DFCommHandler(conn net.Conn) {
         var data df_comm_data
         err := json.Unmarshal(raw_data, &data)
         if err != nil {
-            log.Printf("%s: Invalid JSON: %v\n", df_id, err)
+            log.Printf("%s: Invalid JSON: %v", game, err)
         } else {
             if data.Info.Df_version != "" {
                 game.df_version = data.Info.Df_version
@@ -170,15 +170,16 @@ func DFCommHandler(conn net.Conn) {
             if data.Info.Name != "" {
                 game.name = data.Info.Name
                 game.valid = true
+                log.Printf("%s: Initialized", game)
             }
             x, y := data.Dims.X, data.Dims.Y
             if x != 0 && y != 0 {
                 if x > 256 || y > 256 || x < 80 || y < 25 {
-                    log.Printf("%s: Invalid dimensions: %d, %d\n", df_id, x, y)
+                    log.Printf("%s: Invalid dimensions: %d, %d", game, x, y)
                 } else {
                     game.screen_data.dims.x = uint16(x)
                     game.screen_data.dims.y = uint16(y)
-                    log.Printf("%s: Resized to %d, %d\n", df_id, x, y)
+                    log.Printf("%s: Resized to %d, %d", game, x, y)
                 }
             }
         }
@@ -193,10 +194,10 @@ func DFScreenHandler(conn net.Conn) {
     }
     game := FindGame(string(df_id), true)
     if game.screen.dfconn != nil {
-        log.Printf("%s: screen connection already exists\n", df_id)
+        log.Printf("%s: screen connection already exists", game)
         return
     }
-    log.Printf("%s: New connection (screen)\n", df_id)
+    log.Printf("%s: New connection (screen)", game)
     game.screen.dfconn = &conn
     defer func(){ game.screen.dfconn = nil }()
     for {
